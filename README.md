@@ -18,6 +18,10 @@
 - 👨‍💼 **Expert Mode**: Create domain and role-specific prompts automatically
 - 🔧 **Extensible API**: Easy integration with existing AI workflows
 - 🖥️ **Command-Line Interface**: Convenient CLI for prompt optimization
+- 💰 Tokens Tracking: See exactly how many tokens you're saving
+- 🌱 Carbon Tracking: Measure your environmental impact reduction
+- ⚡ Performance Metrics: Track latency improvements
+
 
 ## 📋 Table of Contents
 
@@ -168,6 +172,24 @@ For interactive usage:
 ```bash
 python -m tests.interactive
 ```
+
+### Carbon-Tracked API Compression
+
+Use the ScaleDown API for enhanced compression with carbon tracking:
+
+```python
+# Select a model
+sd.select_model("gpt-4o")
+
+# Compress via API with carbon tracking
+result = sd.compress_via_api(rate=0.5)  # 0.5 = medium compression
+
+print(f"Original: {result['full_response']}")
+print(f"Compressed: {result['compressed_response']}")
+print(f"Token reduction: {result['comparison']['tokens']} ({result['comparison']['savings']}%)")
+print(f"Cost savings: ${result['comparison']['cost']/100000:.5f}")
+print(f"Carbon saved: {result['comparison']['carbon_saved']} gCO2e")
+print(f"Time saved: {result['comparison']['time_saved']} ms")
 
 ## 🛠️ Contributing
 

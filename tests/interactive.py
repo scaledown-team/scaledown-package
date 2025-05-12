@@ -181,6 +181,55 @@ def mock_optimize_prompt():
         print(f"Error: {str(e)}")
     
     input("\nPress Enter to continue...")
+
+def api_compress_prompt():
+    """Compress prompt via ScaleDown API with carbon tracking."""
+    print_header("API Compression & Carbon Tracking")
+    
+    if not hasattr(sd.sd, 'current_model') or not sd.sd.current_model:
+        print("No model selected. Please select a model first.")
+        input("\nPress Enter to continue...")
+        return
+    
+    try:
+        prompt = sd.sd.get_prompt()
+        print("Original prompt:")
+        print(prompt)
+        
+        # Get compression rate
+        print("\nEnter compression rate (0.0-1.0, higher = more compression):")
+        try:
+            rate = float(input("Rate: "))
+            if rate < 0.0 or rate > 1.0:
+                print("Rate must be between 0.0 and 1.0.")
+                rate = 0.5
+                print(f"Using default rate: {rate}")
+        except ValueError:
+            rate = 0.5
+            print(f"Invalid input. Using default rate: {rate}")
+        
+        # Get result from API
+        result = sd.sd.compress_via_api(rate=rate)
+        
+        print("\nCompressed prompt:")
+        print(result["compressed_response"])
+        
+        print("\nPerformance metrics:")
+        print(f"Original tokens: {result['full_usage']['tokens']}")
+        print(f"Original cost: ${result['full_usage']['cost']:.5f}")
+        print(f"Compressed tokens: {result['compressed_usage']['tokens']}")
+        print(f"Compressed cost: ${result['compressed_usage']['cost']:.5f}")
+        
+        print("\nSavings:")
+        print(f"Token reduction: {result['comparison']['tokens']} ({result['comparison']['savings']}%)")
+        print(f"Cost savings: ${result['comparison']['cost']/100000:.5f}")
+        print(f"Carbon saved: {result['comparison']['carbon_saved']} gCO2e")
+        print(f"Time saved: {result['comparison']['time_saved']} ms")
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    
+    input("\nPress Enter to continue...")
     
 def main_menu():
     """Display the main menu."""
@@ -198,14 +247,21 @@ def main_menu():
         else:
             print("Style: None")
         
+        if hasattr(sd.sd, 'current_model') and sd.sd.current_model:
+            print(f"Model: {sd.sd.current_model}")
+        else:
+            print("Model: None")
+        
         print("\nOptions:")
         print("1. Select Template")
         print("2. Fill Template Values")
         print("3. Select Style")
         print("4. Create Expert Style")
-        print("5. View Prompt")
-        print("6. Mock-Optimize Prompt")
-        print("7. Exit")
+        print("5. Select Model")
+        print("6. View Prompt")
+        print("7. Mock-Optimize Prompt")
+        print("8. API Compress & Carbon Track")  # New option
+        print("9. Exit")
         
         try:
             choice = int(input("\nEnter your choice: "))
@@ -219,10 +275,14 @@ def main_menu():
             elif choice == 4:
                 create_expert_style()
             elif choice == 5:
-                view_prompt()
+                select_model()
             elif choice == 6:
-                mock_optimize_prompt()
+                view_prompt()
             elif choice == 7:
+                mock_optimize_prompt()
+            elif choice == 8:
+                api_compress_prompt()  # New function
+            elif choice == 9:
                 print("\nGoodbye!")
                 sys.exit(0)
             else:
@@ -231,6 +291,5 @@ def main_menu():
         except ValueError:
             print("Please enter a number.")
             input("Press Enter to continue...")
-
 if __name__ == "__main__":
     main_menu()

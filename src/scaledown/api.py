@@ -3,6 +3,8 @@ import json
 
 from .templates import Template, TemplateManager, get_default_manager as get_default_template_manager
 from .styles import Style, StyleManager, get_default_style_manager
+from .api_client import ScaleDownAPIClient
+
 
 class ScaleDown:
     """Main interface for the ScaleDown package."""
@@ -14,6 +16,8 @@ class ScaleDown:
         self.current_template = None
         self.current_style = None
         self.template_values = {}
+        self.current_model = None
+        self.api_client = ScaleDownAPIClient()
     
     def load(self, item_type: str) -> List[Dict[str, str]]:
         """Load templates, styles, or models.
@@ -49,6 +53,33 @@ class ScaleDown:
         
         else:
             raise ValueError(f"Invalid item type: {item_type}. Choose from: templates, styles, models, expert_domains, expert_roles")
+    
+    def compress_via_api(self, prompt: Optional[str] = None, rate: float = 0.5) -> Dict[str, Any]:
+        """Compress prompt via ScaleDown API with carbon tracking.
+        
+        Args:
+            prompt: The prompt to compress (uses result from get_prompt() if None)
+            rate: Compression rate (0.0-1.0, with 1.0 being maximum compression)
+            
+        Returns:
+            Dictionary with compression details including carbon savings
+            
+        Raises:
+            ValueError: If no model is selected
+        """
+        if not self.current_model:
+            raise ValueError("No model selected. Call select_model() first.")
+        
+        if prompt is None:
+            prompt = self.get_prompt()
+        
+        try:
+            result = self.api_client.compress_prompt(prompt, self.current_model, rate)
+            return result
+        except Exception as e:
+            # Fallback to mock optimization if API fails
+            print(f"API compression failed: {str(e)}. Falling back to local optimization.")
+            return self.mock_optimize(prompt)
     
     def select_template(self, template_id: str) -> Template:
         """Select a template by ID."""
