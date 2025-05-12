@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from scaledown.api import ScaleDown
 from scaledown.templates import Template, TemplateManager, get_default_manager
 from scaledown.styles import Style, StyleManager, get_default_style_manager
+from scaledown.guides.optimizer import GuideBasedOptimizer
 
 # Create the ScaleDown instance manually
 sd = ScaleDown()

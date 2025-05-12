@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 
-from ..templates.template import Template
-
+import re
+from ..guides import get_guide_for_model
+from ..guides.optimizer import GuideBasedOptimizer
 
 class BaseModel(ABC):
     """Base class for AI model integrations."""
@@ -16,8 +17,18 @@ class BaseModel(ABC):
         """
         self.model_name = model_name
         self.config = kwargs
+        self.guide_optimizer = GuideBasedOptimizer(model_name)
     
     @abstractmethod
+    def count_tokens(self, text: str) -> int:
+        """Count the number of tokens in text for this model."""
+        pass
+    
+    @abstractmethod
+    def get_token_limit(self) -> int:
+        """Get the token limit for this model."""
+        pass
+    
     def optimize_prompt(self, prompt: str) -> str:
         """Optimize a prompt for this specific model.
         
@@ -27,57 +38,65 @@ class BaseModel(ABC):
         Returns:
             The optimized prompt
         """
-        pass
+        # Use guide-based optimization if available
+        if self.guide_optimizer.has_guide():
+            result = self.guide_optimizer.optimize(prompt)
+            return result["optimized"]
+        
+        # Generic optimization if no guide available
+        # Remove common unnecessary phrases
+        optimized = prompt
+        optimized = re.sub(r"Please\s+", "", optimized)
+        optimized = re.sub(r"Could you\s+", "", optimized)
+        optimized = re.sub(r"I would like you to\s+", "", optimized)
+        
+        return optimized
     
-    @abstractmethod
-    def count_tokens(self, text: str) -> int:
-        """Count the number of tokens in text for this model.
+    def get_optimization_details(self, prompt: str) -> Dict[str, Any]:
+        """Get detailed information about the prompt optimization.
         
         Args:
-            text: Text to count tokens for
+            prompt: The prompt to optimize
             
         Returns:
-            Number of tokens
+            Dictionary with optimization details
         """
-        pass
-    
-    @abstractmethod
-    def get_token_limit(self) -> int:
-        """Get the token limit for this model.
-        
-        Returns:
-            Maximum number of tokens allowed
-        """
-        pass
-    
-    def optimize_template(self, template: Template, values: Dict[str, Any]) -> str:
-        """Optimize a rendered template.
-        
-        Args:
-            template: The template to render and optimize
-            values: Values to fill the template placeholders
+        if self.guide_optimizer.has_guide():
+            result = self.guide_optimizer.optimize(prompt)
             
-        Returns:
-            The optimized prompt
-        """
-        rendered_prompt = template.render(**values)
-        return self.optimize_prompt(rendered_prompt)
-    
-    def get_token_usage(self, text: str) -> Dict[str, Any]:
-        """Get token usage information for text.
-        
-        Args:
-            text: Text to analyze
+            # Add token information
+            original_count = self.count_tokens(prompt)
+            optimized_count = self.count_tokens(result["optimized"])
+            saved_tokens = original_count - optimized_count
+            saved_percentage = (saved_tokens / original_count * 100) if original_count > 0 else 0
             
-        Returns:
-            Dictionary with token count and limit information
-        """
-        count = self.count_tokens(text)
-        limit = self.get_token_limit()
+            result.update({
+                "original_tokens": original_count,
+                "optimized_tokens": optimized_count,
+                "saved_tokens": saved_tokens,
+                "saved_percentage": saved_percentage,
+                "model": self.model_name
+            })
+            
+            return result
+        
+        # Basic optimization details if no guide available
+        optimized = self.optimize_prompt(prompt)
+        original_count = self.count_tokens(prompt)
+        optimized_count = self.count_tokens(optimized)
+        saved_tokens = original_count - optimized_count
+        saved_percentage = (saved_tokens / original_count * 100) if original_count > 0 else 0
         
         return {
-            "count": count,
-            "limit": limit,
-            "percentage": (count / limit) * 100 if limit > 0 else 0,
-            "remaining": limit - count
+            "original": prompt,
+            "optimized": optimized,
+            "guide_name": None,
+            "guide_source": None,
+            "transformations": [],
+            "tip": None,
+            "original_tokens": original_count,
+            "optimized_tokens": optimized_count,
+            "saved_tokens": saved_tokens,
+            "saved_percentage": saved_percentage,
+            "model": self.model_name
         }

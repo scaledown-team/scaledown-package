@@ -139,25 +139,49 @@ def mock_optimize_prompt():
     """Mock-optimize the current prompt."""
     print_header("Mock Optimization")
     
+    if not sd.sd.current_model:
+        print("No model selected. Please select a model first.")
+        input("\nPress Enter to continue...")
+        return
+    
     try:
         prompt = sd.sd.get_prompt()
         print("Original prompt:")
         print(prompt)
         
-        result = sd.sd.mock_optimize()
+        result = sd.sd.optimize()
         
         print("\nOptimized prompt:")
         print(result["optimized"])
         
-        print(f"\nOriginal words: {result['original_tokens']}")
-        print(f"Optimized words: {result['optimized_tokens']}")
-        print(f"Words saved: {result['saved_tokens']} ({result['saved_percentage']:.1f}%)")
+        print(f"\nOriginal tokens: {result['original_tokens']}")
+        print(f"Optimized tokens: {result['optimized_tokens']}")
+        print(f"Tokens saved: {result['saved_tokens']} ({result['saved_percentage']:.1f}%)")
+        
+        # Show guide information if available
+        if result.get("guide_name"):
+            print("\n" + "=" * 40)
+            print(f"Guide: {result['guide_name']} (from {result['guide_source']})")
+            print("=" * 40)
+            
+            if result.get("transformations"):
+                print("\nTransformations applied:")
+                for i, t in enumerate(result["transformations"]):
+                    print(f"  {i+1}. Pattern: {t['pattern']}")
+            
+            if result.get("tip"):
+                tip = result["tip"]
+                print(f"\nTip: {tip['title']}")
+                print(f"  {tip['description']}")
+                print("  Example:")
+                print(f"    Before: {tip['example']['before']}")
+                print(f"    After:  {tip['example']['after']}")
         
     except ValueError as e:
         print(f"Error: {str(e)}")
     
     input("\nPress Enter to continue...")
-
+    
 def main_menu():
     """Display the main menu."""
     while True:
