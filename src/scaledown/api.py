@@ -155,55 +155,55 @@ class ScaleDown:
         return prompt
     
     
- def mock_optimize(self, prompt: Optional[str] = None) -> Dict[str, Any]:
-    """Mock optimization function for testing."""
-    if prompt is None:
-        prompt = self.get_prompt()
-    
-    # Just pretend to optimize by removing some filler words
-    optimized = prompt.replace("Please ", "").replace("kindly ", "").replace("Could you ", "")
-    
-    # Mock token counts (just count words as a proxy for tokens)
-    original_count = len(prompt.split())
-    optimized_count = len(optimized.split())
-    saved_tokens = original_count - optimized_count
-    saved_percentage = (saved_tokens / original_count * 100) if original_count > 0 else 0
-    
-    result = {
-        "original": prompt,
-        "optimized": optimized,
-        "original_tokens": original_count,
-        "optimized_tokens": optimized_count,
-        "saved_tokens": saved_tokens,
-        "saved_percentage": saved_percentage,
-        "model": "mock-model"
-    }
-    
-    # Add guide-based optimization if available
-    if hasattr(self, 'current_model') and self.current_model:
-        from scaledown.guides.optimizer import GuideBasedOptimizer
-        optimizer = GuideBasedOptimizer(self.current_model)
+    def mock_optimize(self, prompt: Optional[str] = None) -> Dict[str, Any]:
+        """Mock optimization function for testing."""
+        if prompt is None:
+            prompt = self.get_prompt()
         
-        if optimizer.has_guide():
-            guide_result = optimizer.optimize(prompt)
-            result.update({
-                "optimized": guide_result["optimized"],
-                "guide_name": guide_result["guide_name"],
-                "guide_source": guide_result["guide_source"],
-                "transformations": guide_result["transformations"],
-                "tip": guide_result["tip"]
-            })
+        # Just pretend to optimize by removing some filler words
+        optimized = prompt.replace("Please ", "").replace("kindly ", "").replace("Could you ", "")
+        
+        # Mock token counts (just count words as a proxy for tokens)
+        original_count = len(prompt.split())
+        optimized_count = len(optimized.split())
+        saved_tokens = original_count - optimized_count
+        saved_percentage = (saved_tokens / original_count * 100) if original_count > 0 else 0
+        
+        result = {
+            "original": prompt,
+            "optimized": optimized,
+            "original_tokens": original_count,
+            "optimized_tokens": optimized_count,
+            "saved_tokens": saved_tokens,
+            "saved_percentage": saved_percentage,
+            "model": "mock-model"
+        }
+        
+        # Add guide-based optimization if available
+        if hasattr(self, 'current_model') and self.current_model:
+            from scaledown.guides.optimizer import GuideBasedOptimizer
+            optimizer = GuideBasedOptimizer(self.current_model)
             
-            # Recalculate tokens with the new optimized text
-            optimized_count = len(result["optimized"].split())
-            saved_tokens = original_count - optimized_count
-            saved_percentage = (saved_tokens / original_count * 100) if original_count > 0 else 0
-            
-            result["optimized_tokens"] = optimized_count
-            result["saved_tokens"] = saved_tokens
-            result["saved_percentage"] = saved_percentage
-    
-    return result
+            if optimizer.has_guide():
+                guide_result = optimizer.optimize(prompt)
+                result.update({
+                    "optimized": guide_result["optimized"],
+                    "guide_name": guide_result["guide_name"],
+                    "guide_source": guide_result["guide_source"],
+                    "transformations": guide_result["transformations"],
+                    "tip": guide_result["tip"]
+                })
+                
+                # Recalculate tokens with the new optimized text
+                optimized_count = len(result["optimized"].split())
+                saved_tokens = original_count - optimized_count
+                saved_percentage = (saved_tokens / original_count * 100) if original_count > 0 else 0
+                
+                result["optimized_tokens"] = optimized_count
+                result["saved_tokens"] = saved_tokens
+                result["saved_percentage"] = saved_percentage
+        
+        return result
 
     def optimize(self, prompt: Optional[str] = None) -> Dict[str, Any]:
         """Optimize a prompt for the current model.
