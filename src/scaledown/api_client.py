@@ -6,7 +6,7 @@ class ScaleDownAPIClient:
     """Client for the ScaleDown API for prompt compression and carbon tracking."""
     
     BASE_URL = "https://tc9sbclr37.execute-api.us-east-1.amazonaws.com/dev"
-    DEFAULT_API_KEY = ""
+    DEFAULT_API_KEY = "xMjBzrtwiy73GS3PvZ01m4g4C46uRfEq1kpjJY8N"
     
     def __init__(self, api_key: Optional[str] = None):
         """Initialize API client.
